@@ -36,41 +36,55 @@ export default function Github() {
       });
   }
 
-  return (
-    <div className='github-container'>
-      <div className="github-content">
-        <h2>Github</h2>
-        <div className="github-itens">
-          <div className="github-avatar">
-            <img src={userGit.avatar_url} alt="foto" />
-            <h3>{userGit.name}</h3>
-            <h4>{userGit.login}</h4>
-            <p>{userGit.bio}</p>
-          </div>
-          <div className="github-list-projects">
-            {
-              projects.slice(0, 4).map((project) =>
-                <div key={project.id} className="projects">
-                  <a href={project.html_url} target='_blank' rel='noreferrer'>
-                    <h3>{project.name}</h3>
-                  </a>
-                  <p>{project.description}</p>
-                </div>
-              )
-            }
+  function filterProjects(projects) {
+    if (projects.stargazers_count !== 0)
+      return projects
+  }
 
-          </div>
-          <p>{errorMsg}</p>
+  var projectsFiltereds = projects.filter(filterProjects);
+  projectsFiltereds.forEach(p => {
+    console.log(p);
+  })
+
+return (
+  <div className='github-container'>
+    <div className="github-content">
+      <h2>Github</h2>
+      <div className="github-itens">
+        <div className="github-avatar">
+          <img src={userGit.avatar_url} alt="foto" />
+          <h3>{userGit.name}</h3>
+          <h4>{userGit.login}</h4>
+          <p>{userGit.bio}</p>
+        </div>
+        <div className="github-list-projects">
+          {
+            projectsFiltereds.slice(0, 4).map((project) =>
+              <div
+                key={project.id}
+                className="projects">
+                <a
+                  href={project.html_url}
+                  target='_blank'
+                  rel='noreferrer'>
+                  <h3>{project.name}</h3>
+                </a>
+                <p>{project.description}</p>
+              </div>
+            )
+          }
 
         </div>
+        <p>{errorMsg}</p>
 
       </div>
-
       <div>
         <a href="https://github.com/lucasrosendo" target='_blank' rel='noreferrer'>
           <button className='git-button'>Todos os projetos</button>
         </a>
       </div>
     </div>
-  )
+
+  </div>
+)
 }

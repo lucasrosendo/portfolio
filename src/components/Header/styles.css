@@ -1,9 +1,11 @@
 header{
-  height: 90px;
+  height: 80px;
   background-color: rgb(87, 87, 87);
   width: 100%;
   display: flex;
   align-items: center;
+  /* position: fixed; */
+  z-index: 20;
 
 }
 .container{
