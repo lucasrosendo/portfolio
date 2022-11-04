@@ -1,0 +1,22 @@
+.menu ul{
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  display: flex;
+  align-items: center; 
+  justify-content: flex-end;
+}
+.menu li{
+  margin-left: 10px;
+  margin-right: 10px;
+}
+.menu a{
+  text-decoration: none;
+  color: #7D8792;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+.menu a:hover{
+  color: #FFFFFF;
+  transition-duration: 1s;
+}
