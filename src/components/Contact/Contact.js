@@ -2,10 +2,10 @@ import React from 'react'
 import './styles.css';
 
 
-export default function About() {
+function Contact() {
   return (
-    <div>
-      Sobre
-    </div>
+    <div>Contact</div>
   )
 }
+
+export default Contact

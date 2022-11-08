@@ -3,14 +3,10 @@
   width: 100%;
   margin: 0 auto;
   margin-bottom: 7rem;
-  padding: 20px 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* background-image: url("../../../src/assets/img/github-banner.png"); */
-  background: #2b2f77;
-  background: -webkit-linear-gradient(0deg, #2b2f77 0%, #141852 50%, #070b34 100%);
-  background: linear-gradient(0deg, #2b2f77 0%, #141852 50%, #070b34 100%);
+  background-image: url("../../../src/assets/img/github-banner.png");
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -24,6 +20,8 @@
 .github-content h2{
   text-align: center;
   color: #E0a80d;
+  font-size: 2rem;
+  padding: 1rem;
 }
 .github-itens{
   display: flex;
@@ -84,7 +82,7 @@
   background-color: transparent;
   color: #dfa70c;
 }
-a{
+.projects a{
   text-decoration: none;
   color: black;
   cursor: pointer;

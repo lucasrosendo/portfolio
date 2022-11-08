@@ -1,4 +1,5 @@
-import About from "components/About";
+import About from "components/About/About";
+import Contact from "components/Contact/Contact";
 import Github from "components/Github/Github";
 import Header from "components/Header";
 import './styles.css';
@@ -10,6 +11,7 @@ function App() {
    <Header/>
    <About/>
    <Github/>
+   <Contact/>
    </>
   );
 }

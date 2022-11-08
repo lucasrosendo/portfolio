@@ -12,11 +12,13 @@
 }
 .menu a{
   text-decoration: none;
-  color: #7D8792;
-  font-size: 1.3rem;
+  color: #868686;
+  font-size: 1.0rem;
   cursor: pointer;
 }
 .menu a:hover{
-  color: #FFFFFF;
+  color: #f4f4f2;
   transition-duration: 1s;
+  font-size: 1.3rem;
+
 }

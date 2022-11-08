@@ -49,7 +49,7 @@ export default function Github() {
 return (
   <div className='github-container'>
     <div className="github-content">
-      <h2>Github</h2>
+      <h2>GitHub</h2>
       <div className="github-itens">
         <div className="github-avatar">
           <img src={userGit.avatar_url} alt="foto" />
@@ -59,7 +59,7 @@ return (
         </div>
         <div className="github-list-projects">
           {
-            projectsFiltereds.slice(0, 4).map((project) =>
+            projectsFiltereds.slice(0, 6).map((project) =>
               <div
                 key={project.id}
                 className="projects">
@@ -79,7 +79,7 @@ return (
 
       </div>
       <div>
-        <a href="https://github.com/lucasrosendo" target='_blank' rel='noreferrer'>
+        <a href="https://github.com/lucasrosendo?tab=repositories" target='_blank' rel='noreferrer'>
           <button className='git-button'>Todos os projetos</button>
         </a>
       </div>

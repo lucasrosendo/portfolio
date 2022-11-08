@@ -12,7 +12,7 @@ export default function Header() {
         <div className='container'>
 
           <div>
-            Logo
+            
           </div>
           <Menu />
 
