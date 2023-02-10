@@ -4,9 +4,8 @@ header{
   width: 100%;
   display: flex;
   align-items: center;
-  /* position: fixed; */
+  position: fixed;
   z-index: 20;
-
 }
 .container{
   max-width: 1280px;

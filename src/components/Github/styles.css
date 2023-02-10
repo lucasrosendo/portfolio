@@ -6,7 +6,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-image: url("../../../src/assets/img/github-banner.png");
+  /* background-image: url("../../../src/assets/img/github-banner.png"); */
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -19,7 +19,7 @@
 }
 .github-content h2{
   text-align: center;
-  color: #E0a80d;
+  color: #000;
   font-size: 2rem;
   padding: 1rem;
 }

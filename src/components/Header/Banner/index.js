@@ -6,10 +6,10 @@ export default function Banner() {
   return (
     <div className='banner'>
       <div className='content-banner'>
-        {/* <h1>EM CONSTRUÇÃO!!!</h1> */}
+        {/* <h1>SITE EM CONSTRUÇÃO!!!</h1> */}
         <h2>Oi, eu sou</h2>
         <h1>Desenvolvedor Web Full Stack</h1>
-        <p>Concluindo curso de Desenvolvimento web na Trybe e cursando Engenharia de software na AMPLI</p>
+        <p>Formado em Desenvolvimento web na <span className='trybe'>Trybe</span> e cursando Engenharia de software na AMPLI</p>
         <button type='button'> Download CV</button>
 
       </div>

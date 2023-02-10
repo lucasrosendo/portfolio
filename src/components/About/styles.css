@@ -9,6 +9,8 @@
   background-size: cover;
   background-repeat: no-repeat;
   padding: 2rem;
+  border: solid 0.5rem #E0a80d;
+  border-radius: 1rem;
 }
 .about.content{
   max-width: 1280px;
@@ -17,27 +19,31 @@
 }
 .photo-and-description{
   display: flex;
+  margin: 0 auto;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  whidth: 100%;
 }
 .photo-perfil{
   width: 35rem;
   height: 10rem;
   max-width: 250px;
-  border-radius: 50%;
+  border-radius: 5%;
   background-image: url(../../assets/img/bahia.png) ;
   background-position: center;
   background-size: cover;
   text-align: center;
   position: relative;
+  border: solid 0.1rem #191013;
 }
+
 .description p{
   color: #191013;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   text-align: justify;
   padding: 1rem;
-  margin: 1rem;
+  margin: 1rem auto;
 }
 .stacks{
   align-items: center;
@@ -67,4 +73,22 @@
   color: #f4f4f2;
   font-size: 1.3rem;
   background-color: #191013;
+}
+
+@media(max-width: 870px) {
+  .stacks ul{
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+  }
+  .photo-and-description{
+    flex-direction: column;
+  }
+  .photo-perfil{
+    
+  width: 25rem;
+  height: 10rem;
+  max-width: 150px;
+  }
 }

@@ -11,9 +11,9 @@ export default function About() {
 
           </div>
           <div className="description">
-            <p>Nascido e criado em Irecê-BA até os meus 14 anos, hoje moro em Itabuna-BA aos 31. A paixão por tecnologia vem desde criança, quando tive meu primeiro contato com um computador, mas, foi depois da vida adulta que descobri a programação e suas possibilidades de mudança de mundo, o que só fez consolidar o meu amor pelo mundo tecnológico.
+            <p>Nascido e criado em Irecê-BA até os meus 14 anos, hoje moro em Itabuna-BA aos 31. A paixão por tecnologia vem desde criança, quando tive meu primeiro contato com um computador, mas foi depois da vida adulta que descobri a programação e suas possibilidades de mudança de mundo, o que só fez consolidar o meu amor pelo mundo tecnológico.
             <br/>
-            Ah! A imagem ao lado estou comemorando o tetra do Bahia (baeea!) na copa do nordeste, segurando a camisa que se tornou meu amuleto da sorte , a de meu pai.
+            Ah! Na imagem ao lado estou comemorando o tetra do Bahia (baeea!) na copa do nordeste, segurando a camisa de meu pai, que se tornou meu amuleto da sorte.
             </p>
           </div>
         </div>

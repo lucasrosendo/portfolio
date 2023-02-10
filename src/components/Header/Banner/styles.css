@@ -1,5 +1,5 @@
 .banner{
-  height: 50vh;
+  height: 55vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,6 +21,10 @@
 }
 div{
   z-index: 10;
+}
+.trybe{
+  color: #5fd149;
+  font-weight: bold;
 }
 
 .banner h2{
