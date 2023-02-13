@@ -36,8 +36,8 @@ export default function About() {
               rel='noreferrer'>Docker</a>
             <a href='https://dev.mysql.com/doc/' target='_blank'
               rel='noreferrer'>MySql</a>
-            <a href='https://www.mongodb.com/docs/' target='_blank'
-              rel='noreferrer'>MongoDB</a>
+            {/* <a href='https://www.mongodb.com/docs/' target='_blank'
+              rel='noreferrer'>MongoDB</a> */}
           </ul>
         </div>
       </div>
