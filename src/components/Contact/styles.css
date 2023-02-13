@@ -4,5 +4,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #000;
+}
+.icons-contact{
+  height: 50px;
+  width: 50px;
+  margin-bottom: 0;
+  transition: 0.5s;
+  cursor: pointer;
+  text-decoration: none;
+}
+.icons-contact:hover{
+  margin-bottom: 30px;
+  height: 90px;
+  text-decoration: none;
 }
