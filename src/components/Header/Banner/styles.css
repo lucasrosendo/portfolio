@@ -66,3 +66,6 @@ div{
   color: #DFA70C;
   border: solid 1px #EEEEEE;
 }
+.content-banner a{
+  text-decoration: none;
+}
