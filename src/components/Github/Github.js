@@ -47,7 +47,7 @@ export default function Github() {
   })
 
 return (
-  <div className='github-container'>
+  <div className='github-container' id='portfolio'>
     <div className="github-content">
       <h2>GitHub</h2>
       <div className="github-itens">
