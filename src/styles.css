@@ -1,6 +1,6 @@
 *{
   box-sizing: border-box;
-  scroll-behavior: smooth;
+  scroll-behavior: smooth;  
 }
 :target {
   scroll-margin-top: 60px;
@@ -9,8 +9,8 @@ body{
   margin: 0px;
   padding: 0px;
   font-family: 'Josefin Sans', sans-serif;
-  background: #d7d7d7;
-  background: -webkit-linear-gradient(0deg, #d7d7d7 0%, #eeeeee 100%);
-  background: linear-gradient(0deg, #d7d7d7 0%, #eeeeee 100%);
-  
+  background: #cbcbcb;
+  background: linear-gradient(90deg,#cbcbcb 0%, #6a6a6a 80%);
+  background: -webkit-linear-gradient(90deg,#cbcbcb 0%, #6a6a6a 80%);
+  background: -moz-linear-gradient(90deg,#cbcbcb 0%, #6a6a6a 80%);  
 }

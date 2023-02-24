@@ -54,7 +54,7 @@ return (
         <div className="github-avatar">
           <img src={userGit.avatar_url} alt="foto" />
           <h3>{userGit.name}</h3>
-          <h4>{userGit.login}</h4>
+          {/* <h4>{userGit.login}</h4> */}
           <p>{userGit.bio}</p>
         </div>
         <div className="github-list-projects">
