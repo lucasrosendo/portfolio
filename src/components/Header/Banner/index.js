@@ -33,7 +33,7 @@ export default function Banner() {
         </motion.p>
 
         <motion.a
-          href="/LucasRosendoResume.pdf"
+          href="https://docs.google.com/document/d/1FWoLmNZwz_zBle2bjhPNxrrlEpVoQ3QzNiwXXYiJ7lc/edit?usp=sharing"
           target="_blank"
           rel="noreferrer"
           className="resume-btn glass-panel"
