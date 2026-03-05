@@ -1,16 +1,29 @@
-import React from 'react'
+import React from 'react';
+import { motion } from 'framer-motion';
 import './styles.css';
 
-
 export default function Menu() {
+  const links = [
+    { name: 'Home', href: '#home' },
+    { name: 'Sobre', href: '#sobre' },
+    { name: 'Desafios', href: '#desafios' },
+    { name: 'Contato', href: '#contato' }
+  ];
+
   return (
-    <div className='menu'>
+    <nav className="menu">
       <ul>
-        <li><a href='#home'>Home</a></li>
-        <li><a href='#sobre'>Sobre</a></li>
-        <li><a href='#portfolio'>Portifolio</a></li>
-        <li><a href='#contato'>Contato</a></li>
+        {links.map((link, index) => (
+          <motion.li
+            key={index}
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <a href={link.href}>{link.name}</a>
+          </motion.li>
+        ))}
       </ul>
-    </div>
-  )
+    </nav>
+  );
 }
+

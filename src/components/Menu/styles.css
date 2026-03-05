@@ -1,24 +1,26 @@
-.menu ul{
+.menu ul {
   padding: 0;
   margin: 0;
   list-style-type: none;
   display: flex;
-  align-items: center; 
+  align-items: center;
   justify-content: flex-end;
+  gap: 32px;
 }
-.menu li{
-  margin-left: 10px;
-  margin-right: 10px;
-}
-.menu a{
-  text-decoration: none;
-  color: #868686;
-  font-size: 1.0rem;
-  cursor: pointer;
-}
-.menu a:hover{
-  color: #f4f4f2;
-  transition-duration: 0.5s;
-  font-size: 1.3rem;
 
+.menu li {
+  margin: 0;
+}
+
+.menu a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.menu a:hover {
+  color: var(--accent-secondary);
 }

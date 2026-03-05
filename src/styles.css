@@ -1,16 +1,56 @@
-*{
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+:root {
+  --bg-color: #0d0e15;
+  --bg-gradient: linear-gradient(135deg, #0d0e15 0%, #161a2b 100%);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #06b6d4;
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+}
+
+* {
   box-sizing: border-box;
-  scroll-behavior: smooth;  
+  scroll-behavior: smooth;
+  margin: 0;
+  padding: 0;
 }
+
 :target {
-  scroll-margin-top: 60px;
+  scroll-margin-top: 80px;
 }
-body{
-  margin: 0px;
-  padding: 0px;
-  font-family: 'Josefin Sans', sans-serif;
-  background: #cbcbcb;
-  background: linear-gradient(90deg,#cbcbcb 0%, #6a6a6a 80%);
-  background: -webkit-linear-gradient(90deg,#cbcbcb 0%, #6a6a6a 80%);
-  background: -moz-linear-gradient(90deg,#cbcbcb 0%, #6a6a6a 80%);  
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+}
+
+.glow-text {
+  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

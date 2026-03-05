@@ -1,18 +1,31 @@
-header{
-  height: 6vh;
-  background-color: #191013;
+.glass-header {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 80px;
+  z-index: 1000;
+  background: rgba(13, 14, 21, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
-  position: fixed;
-  z-index: 20;
+  transition: var(--transition-medium);
 }
-.container{
-  max-width: 1280px;
+
+.header-container {
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 20px 15px;
+  padding: 0 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -1px;
 }

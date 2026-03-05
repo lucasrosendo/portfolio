@@ -1,28 +1,56 @@
-import React from 'react'
+import React from 'react';
+import { motion } from 'framer-motion';
+import { BsInstagram, BsLinkedin } from 'react-icons/bs';
+import { MdEmail } from 'react-icons/md';
+import { VscGithubInverted } from 'react-icons/vsc';
 import './styles.css';
-import { BsInstagram, BsLinkedin } from 'react-icons/bs'
-import { MdEmail } from 'react-icons/md'
-import { VscGithubInverted } from 'react-icons/vsc'
-
 
 function Contact() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
+
   return (
-    <div className='contact-container' id='contato'>
+    <section className="contact-section" id="contato">
+      <motion.div
+        className="contact-container"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+      >
+        <motion.h2 variants={itemVariants} className="glow-text section-title">Contato</motion.h2>
 
-      <div className='social-icons'>
-        <a href="http://www.instagram.com/lucasrosendo0" target='_blank' rel='noreferrer'><h1 className='icons-contact'><BsInstagram /></h1></a>
-        <a href="http://www.linkedin.com/in/lucasrosendo" target='_blank' rel='noreferrer'><h1 className='icons-contact'><BsLinkedin /></h1></a>
-        <a href="http://www.github.com/lucasrosendo" target='_blank' rel='noreferrer'><h1 className='icons-contact'><VscGithubInverted /></h1></a>
-      </div>
+        <motion.div variants={itemVariants} className="social-links">
+          <a href="http://www.instagram.com/lucasrosendo0" target="_blank" rel="noreferrer" className="social-glass">
+            <BsInstagram size={28} />
+          </a>
+          <a href="http://www.linkedin.com/in/lucasrosendo" target="_blank" rel="noreferrer" className="social-glass">
+            <BsLinkedin size={28} />
+          </a>
+          <a href="http://www.github.com/lucasrosendo" target="_blank" rel="noreferrer" className="social-glass">
+            <VscGithubInverted size={28} />
+          </a>
+        </motion.div>
 
-
-      <div className='container-bot'>
-        <h1><MdEmail />lucasrosendo91@gmail.com</h1>
-        {/* <h1><BsWhatsapp />(73)99194-5041</h1> */}
-      </div>
-
-    </div>
-  )
+        <motion.div variants={itemVariants} className="email-container glass-panel">
+          <MdEmail size={24} className="email-icon" />
+          <span>lucasrosendo91@gmail.com</span>
+        </motion.div>
+      </motion.div>
+    </section>
+  );
 }
 
-export default Contact
+export default Contact;
