@@ -1,0 +1,117 @@
+1:"$Sreact.fragment"
+2:I[24315,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"LanguageProvider"]
+3:I[22016,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],""]
+4:I[9661,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default"]
+5:I[11340,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default"]
+6:I[39756,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default"]
+7:I[37457,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default"]
+8:I[85250,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js","/portfolio/_next/static/chunks/28-rhnp06mdkl.js"],"default"]
+10:I[68027,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default",1]
+:HL["/portfolio/_next/static/chunks/2nkvgjli46_47.css","style"]
+:HL["/portfolio/_next/static/chunks/3plegg7med040.css","style"]
+9:T1811,
+## The Pitch
+
+The core idea is simple to say and hard to build: a card game where every character is defined by **two fighting styles** chosen from a roster of ten — boxing, wrestling, karate, BJJ, and others — each with its own authentic progression system (belts, weight-class records, win counts, time-and-test exams). Combat itself is turn-based, but with a twist: players can react to an opponent's declared move with an **instant defense**, paid for out of the same shared stamina pool they'll need for their own next turn.
+
+That single design choice — ten *genuinely different* progression systems layered on top of a reactive combat loop — is also the project's single biggest technical risk. This devlog covers the first real pass at taming it: the architecture plan, the risks we flagged, and what a hand-run combat simulation already taught us before a single UI screen exists.
+
+## Problem: Ten Progression Systems, One Codebase
+
+Belts don't work like weight-class records. Weight-class records don't work like win-count rankings. If we build each fighting style as its own bespoke system, we get ten times the code, ten times the bugs, and a UI team drowning in one-off screens.
+
+## Technical Solution: Data-Driven Everything
+
+The architecture leans hard on Unity `ScriptableObject`s and the Strategy pattern to keep that variety from leaking into the codebase:
+
+- **`CardDefinition`** (ScriptableObject) holds a card's identity — id, style, type, stamina cost, rarity, minimum tier — but *not* a fixed effect field. Card effects (flat damage, conditional percentage buffs, damage reduction with a floor, flat reduction, opponent debuffs) are too varied for a single struct, so each card holds a list of polymorphic `CardEffect` objects (`DamageEffect`, `DamageMultiplierBuffEffect`, `PercentDamageReductionEffect`, and so on), each implementing `Apply(CombatContext ctx)`. New effect types slot in without touching `CardDefinition` itself.
+- **`FightingStyleDefinition`** describes a style as an ordered list of `GradeDefinition`s (display name, unlocked card tier, build points, UI requirements) — so "Purple Belt," "Featherweight Contender," and "Level 3" are just data, not separate code paths.
+- **`IGradeProgressionEvaluator`** is the piece that actually collapses the ten-systems problem: instead of ten bespoke advancement rules, we expect **3-4 reusable archetypes** — a win-count evaluator (wrestling-style), a time-and-test evaluator (karate/BJJ-style belts), and a record-by-weight-class evaluator (boxing-style) — each `FightingStyleDefinition` just references which one it uses.
+- Combat resolution is a **State pattern with an observable interrupt point**: `AwaitingAction → ActionDeclared → ReactionWindow → ResolvingEffects → TurnEnd`, with instant defense implemented as an observer that intercepts the `ActionDeclared → ResolvingEffects` transition. That interrupt point is also where multiplayer would eventually hook in, without rewriting the state machine.
+
+The first system slated for prototyping is deliberately unglamorous: a pure C# combat core (turn state machine + stamina + effect pipeline) with **no `MonoBehaviour`, no `Update()`**, testable headlessly through Unity's Edit Mode Test Runner. UI comes after that core is proven stable, not before.
+
+## Player Impact: What a Hand-Simulated Fight Already Found
+
+Before writing a line of gameplay code, we ran combat entirely on paper — four manual rounds, Fighter A always acting first — to sanity-check the core rules:
+
+- Stamina caps at 5, regenerates +2 per own turn (capped, no overflow loss), with turn 1 as a fixed exception (both fighters start at 3).
+- Attacks, buffs/debuffs, *and* instant defense all draw from the same stamina pool.
+
+**Result:** 70 HP (Fighter A) vs. 75 HP (Fighter B) — close, despite A having the theoretical first-move advantage. That's an encouraging early signal that shared stamina plus reactive defense is doing its job of neutralizing "whoever attacks first wins."
+
+But the same four rounds surfaced two real problems worth fixing before this goes further:
+
+- **The "empty turn" bug.** Because instant defense spends from the *same* pool as a fighter's own upcoming action, it's possible to reach your turn with zero stamina and nothing playable — round 2 hit exactly this for Fighter B. A fully wasted turn doesn't feel good in a fighting game, so the fix under consideration is a guaranteed zero-cost card (a basic dodge or step-back, no damage) or a stamina floor that never bottoms out completely.
+- **A possible "reacts second" advantage.** The fighter who reacts mid-opponent's-turn gets to see the opponent's card *and* may have stamina left over for their own attack afterward; the fighter who acts first tends to spend stamina on their own move and has less left to defend with. Four rounds isn't enough data to confirm this pattern — it needs to run at scale.
+
+Which points directly at the next milestone: an **automated simulation harness**. Four manual rounds prove the concept; answering "does reacting second actually win more often?" needs thousands of automated simulations, not a spreadsheet. The existing hand-traced rounds already double as a ready-made regression test for that harness once it exists.
+
+## What's Still Open
+
+A few decisions are deliberately unresolved and will shape the technical scope by orders of magnitude — most importantly, whether competitive PvP needs to feel like a live match (real-time netcode, authoritative server, the reaction window seeing the opponent's card *live*) or can be asynchronous (both players commit blind, resolve simultaneously — a real change to the core "see and react" mechanic). That call has to land before any networked combat UI gets built, and it's the headline open question heading into the next devlog.
+
+---
+
+*This is the first entry in the `/game-develop` devlog series, tracking the build of a fighting-discipline card game from architecture through playtesting. Next up: the combat simulation harness and a first answer to the "who benefits from reacting" question.*
+a:T1ab5,
+## O Pitch
+
+A ideia central é simples de descrever e difícil de construir: um jogo de cartas onde cada personagem é definido por **duas modalidades de luta** escolhidas entre dez — boxe, wrestling, karatê, BJJ e outras — cada uma com seu próprio sistema de progressão autêntico (faixas, recordes por categoria de peso, contagem de vitórias, exames de tempo-e-teste). O combate em si é por turnos, mas com uma reviravolta: os jogadores podem reagir à jogada declarada do oponente com uma **defesa instantânea**, paga com o mesmo pool de estamina compartilhado que vão precisar no próprio turno seguinte.
+
+Essa única decisão de design — dez sistemas de progressão *genuinamente diferentes* sobrepostos a um loop de combate reativo — também é o maior risco técnico do projeto. Este devlog cobre a primeira passada real para domar isso: o plano de arquitetura, os riscos sinalizados e o que uma simulação manual de combate já ensinou antes de existir uma única tela de UI.
+
+## Problema: Dez Sistemas de Progressão, Um Só Código-Base
+
+Faixas não funcionam como recordes por categoria de peso. Recordes por categoria de peso não funcionam como rankings por contagem de vitórias. Se construirmos cada estilo de luta como um sistema sob medida, temos dez vezes mais código, dez vezes mais bugs e uma equipe de UI afogada em telas feitas sob encomenda.
+
+## Solução Técnica: Tudo Orientado a Dados
+
+A arquitetura se apoia fortemente em `ScriptableObject`s da Unity e no padrão Strategy para impedir que essa variedade vaze para o código:
+
+- **`CardDefinition`** (ScriptableObject) guarda a identidade de uma carta — id, estilo, tipo, custo de estamina, raridade, tier mínimo — mas *não* um campo de efeito fixo. Os efeitos das cartas (dano fixo, buffs percentuais condicionais, redução de dano com piso mínimo, redução fixa, debuffs no oponente) são variados demais para caber numa struct única, então cada carta guarda uma lista de objetos `CardEffect` polimórficos (`DamageEffect`, `DamageMultiplierBuffEffect`, `PercentDamageReductionEffect`, entre outros), cada um implementando `Apply(CombatContext ctx)`. Novos tipos de efeito entram sem tocar em `CardDefinition`.
+- **`FightingStyleDefinition`** descreve um estilo como uma lista ordenada de `GradeDefinition`s (nome de exibição, tier de carta desbloqueado, pontos de build, requisitos de UI) — então "Faixa Roxa", "Peso Pena Contender" e "Nível 3" são só dados, não caminhos de código separados.
+- **`IGradeProgressionEvaluator`** é a peça que de fato resolve o problema dos dez sistemas: em vez de dez regras de avanço sob medida, esperamos **3-4 arquétipos reaproveitáveis** — um avaliador por contagem de vitórias (estilo wrestling), um avaliador de tempo-e-teste (faixas estilo karatê/BJJ) e um avaliador de recorde por categoria de peso (estilo boxe) — cada `FightingStyleDefinition` só referencia qual avaliador usar.
+- A resolução de combate é um **padrão State com um ponto de interrupção observável**: `AwaitingAction → ActionDeclared → ReactionWindow → ResolvingEffects → TurnEnd`, com a defesa instantânea implementada como um observer que intercepta a transição `ActionDeclared → ResolvingEffects`. Esse ponto de interrupção também é onde o multiplayer eventualmente se encaixaria, sem reescrever a máquina de estados.
+
+O primeiro sistema previsto para prototipagem é propositalmente pouco glamouroso: um núcleo de combate em **C# puro** (máquina de estados de turno + estamina + pipeline de efeitos) **sem `MonoBehaviour`, sem `Update()`**, testável de forma headless pelo Test Runner em Edit Mode da Unity. A UI vem depois desse núcleo provado estável, não antes.
+
+## Impacto no Jogador: O Que uma Luta Simulada à Mão Já Revelou
+
+Antes de escrever uma linha de código de gameplay, rodamos o combate inteiramente no papel — quatro rodadas manuais, com o Lutador A sempre agindo primeiro — para validar as regras centrais:
+
+- A estamina tem teto de 5, regenera +2 por turno próprio (com teto, sem perda de excedente), com o turno 1 como exceção fixa (os dois começam com 3).
+- Ataques, buffs/debuffs *e* defesa instantânea saem todos do mesmo pool de estamina.
+
+**Resultado:** 70 HP (Lutador A) contra 75 HP (Lutador B) — próximo, apesar da vantagem teórica de A por agir primeiro. É um sinal inicial encorajador de que estamina compartilhada mais defesa reativa estão cumprindo o papel de neutralizar o "quem ataca primeiro vence".
+
+Mas as mesmas quatro rodadas revelaram dois problemas reais que valem a pena corrigir antes de avançar:
+
+- **O bug do "turno vazio".** Como a defesa instantânea gasta do mesmo pool da própria ação futura do lutador, é possível chegar ao seu turno com estamina zerada e nada jogável — a rodada 2 caiu exatamente nisso para o Lutador B. Um turno totalmente perdido não é uma boa sensação num jogo de luta, então a correção em consideração é uma carta garantida de custo zero (uma esquiva básica ou um passo atrás, sem dano) ou um piso de estamina que nunca zera de vez.
+- **Uma possível vantagem de "quem reage por último".** O lutador que reage no meio do turno do oponente já viu a carta do adversário e ainda pode sobrar estamina para o próprio ataque depois; quem age primeiro tende a gastar estamina no próprio golpe e sobra menos para se defender depois. Quatro rodadas não são suficientes para confirmar esse padrão — precisa rodar em escala.
+
+O que aponta direto para o próximo marco: um **harness de simulação automatizada**. Quatro rodadas manuais provam o conceito; responder "reagir em segundo realmente vence mais?" exige milhares de simulações automatizadas, não uma planilha. As rodadas já traçadas à mão já servem como um teste de regressão pronto para esse harness assim que ele existir.
+
+## O Que Ainda Está em Aberto
+
+Algumas decisões estão propositalmente em aberto e vão mudar o escopo técnico em ordens de grandeza — a mais importante: se o PvP competitivo precisa parecer uma partida ao vivo (netcode em tempo real, servidor autoritativo, a janela de reação vendo a carta do oponente ao vivo) ou pode ser assíncrono (os dois jogadores comitam às cegas, resolvendo simultaneamente — uma mudança real na mecânica central de "ver e reagir"). Essa decisão precisa ser tomada antes de qualquer UI de combate em rede ser construída, e é a pergunta em destaque para o próximo devlog.
+
+---
+
+*Este é o primeiro post da série de devlogs de `/game-develop`, acompanhando a construção de um card game de disciplinas de luta, da arquitetura aos testes de jogabilidade. No próximo: o harness de simulação de combate e uma primeira resposta pra pergunta de "quem se beneficia ao reagir".*
+e:X
+0:{"P":null,"c":["","blog",""],"q":"","i":false,"f":[[["",{"children":["blog",{"children":["__PAGE__",{},"$undefined","$undefined",4608]},"$undefined","$undefined",4608]},"$undefined","$undefined",4624],[["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/portfolio/_next/static/chunks/2nkvgjli46_47.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}],["$","script","script-0",{"src":"/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","async":true,"nonce":"$undefined"}],["$","script","script-1",{"src":"/portfolio/_next/static/chunks/02m4qvfk9me-n.js","async":true,"nonce":"$undefined"}]],["$","html",null,{"lang":"pt-BR","children":["$","body",null,{"children":["$","$L2",null,{"children":[["$","header",null,{"className":"glass-header","children":["$","div",null,{"className":"header-container","children":[["$","div",null,{"className":"logo-container","children":["$","$L3",null,{"href":"/","className":"logo glow-text","children":"<LR/>"}]}],["$","div",null,{"className":"header-actions","children":[["$","$L4",null,{}],["$","$L5",null,{}]]}]]}]}],["$","$L6",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L7",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]]}]}]}]]}],{"children":[["$","$1","c",{"children":[null,["$","$L6",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L7",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":[["$","$1","c",{"children":[["$","$L8",null,{"posts":[{"slug":"fighting-card-game-foundations","en":{"slug":"fighting-card-game-foundations","title":"Devlog #1: Laying the Foundations for a Fighting-Style Card Game","date":"2026-08-29","author":"Lucas Rosendo","tags":["game-develop","devlog","unity","game-design","architecture"],"coverImage":null,"excerpt":"The first technical and design pass on a card game built around fighting-discipline progression: ten different grading systems, a shared-stamina combat loop, and the architecture decisions needed to keep it all from collapsing under its own complexity.","readingTime":"6 min","content":"$9"},"pt":{"slug":"fighting-card-game-foundations","title":"Devlog #1: Lançando as Fundações de um Card Game de Luta","date":"2026-08-29","author":"Lucas Rosendo","tags":["game-develop","devlog","unity","game-design","architecture"],"coverImage":null,"excerpt":"A primeira passada técnica e de design sobre um card game construído em torno da progressão de disciplinas de luta: dez sistemas de graduação diferentes, um loop de combate com estamina compartilhada e as decisões de arquitetura necessárias pra tudo isso não desmoronar sob o próprio peso.","readingTime":"6 min","content":"$a"}}]}],["$Lb","$Lc"],"$Ld"]}],{},null,false,null]},null,false,"$e"]},null,false,null],"$Lf",false]],"m":"$undefined","G":["$10",["$L11"]],"S":true,"h":null,"r":"$undefined","s":"$undefined","a":"$undefined","l":"$undefined","p":"$undefined","d":"$undefined","b":"kEzrXzVJthVbihZH3R-Wr"}
+12:I[97367,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"OutletBoundary"]
+13:"$Sreact.suspense"
+15:I[97367,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"ViewportBoundary"]
+17:I[97367,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"MetadataBoundary"]
+b:["$","link","0",{"rel":"stylesheet","href":"/portfolio/_next/static/chunks/3plegg7med040.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]
+c:["$","script","script-0",{"src":"/portfolio/_next/static/chunks/28-rhnp06mdkl.js","async":true,"nonce":"$undefined"}]
+d:["$","$L12",null,{"children":["$","$13",null,{"name":"Next.MetadataOutlet","children":"$@14"}]}]
+f:["$","$1","h",{"children":[null,["$","$L15",null,{"children":"$L16"}],["$","div",null,{"hidden":true,"children":["$","$L17",null,{"children":["$","$13",null,{"name":"Next.Metadata","children":"$L18"}]}]}],null]}]
+11:["$","link","0",{"rel":"stylesheet","href":"/portfolio/_next/static/chunks/2nkvgjli46_47.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]
+e:C
+16:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+19:I[27201,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"IconMark"]
+14:null
+18:[["$","title","0",{"children":"Blog | Lucas Rosendo"}],["$","meta","1",{"name":"description","content":"Devlogs and technical notes from Lucas Rosendo."}],["$","link","2",{"rel":"manifest","href":"/portfolio/site.webmanifest","crossOrigin":"$undefined"}],["$","link","3",{"rel":"icon","href":"/portfolio/favicon.ico"}],["$","link","4",{"rel":"icon","href":"/portfolio/favicon-16x16.png","sizes":"16x16","type":"image/png"}],["$","link","5",{"rel":"icon","href":"/portfolio/favicon-32x32.png","sizes":"32x32","type":"image/png"}],["$","link","6",{"rel":"apple-touch-icon","href":"/portfolio/apple-touch-icon.png"}],["$","$L19","7",{}]]
