@@ -24,3 +24,13 @@
 .menu a:hover {
   color: var(--accent-secondary);
 }
+
+@media (max-width: 640px) {
+  .menu ul {
+    gap: 16px;
+  }
+
+  .menu a {
+    font-size: 0.85rem;
+  }
+}
