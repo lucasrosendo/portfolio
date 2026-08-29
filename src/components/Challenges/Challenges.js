@@ -1,45 +1,29 @@
-import React, { useState } from 'react';
+'use client';
+
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Code, Database, Server, ChevronDown } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import './styles.css';
 
+// Icons are visual-only and language-independent; only the copy comes from
+// the translation dictionary, merged in below by index.
+const CHALLENGE_ICONS = [
+    <Database key="db" size={32} className="challenge-icon cyan" />,
+    <Code key="code" size={32} className="challenge-icon purple" />,
+    <Server key="server" size={32} className="challenge-icon green" />,
+    <CheckCircle key="check" size={32} className="challenge-icon yellow" />,
+];
+
 export default function Challenges() {
+    const { t } = useLanguage();
     const [expandedId, setExpandedId] = useState(null);
 
-    const challenges = [
-        {
-            id: 1,
-            title: "Relatórios Complexos e Queries SQL",
-            icon: <Database size={32} className="challenge-icon cyan" />,
-            shortDesc: "Otimização de buscas e cruzamento estruturado de 7 tabelas com Oracle.",
-            fullDesc: "Replicar um relatório de vendas buscando informações diretamente no banco Oracle, sem regras definidas de onde coletar os dados e dependendo de procedures de terceiros. A solução englobou muita pesquisa, testes e a criação de consultas complexas combinando 7 tabelas via JOINS, INNER JOINS, LEFT JOINS e filtros robustos para alinhamento da regra de negócio ao relatório final.",
-            techs: ["Oracle SQL", "Análise de Dados"]
-        },
-        {
-            id: 2,
-            title: "Migração de Sistemas (Regras e ETL)",
-            icon: <Code size={32} className="challenge-icon purple" />,
-            shortDesc: "Transição completa entre plataformas, desde a UI até a base de dados via Apache Airflow.",
-            fullDesc: "A migração exigiu a superação de três desafios: 1) Refatorei a lógica de acessos legada (feita antes apenas no frontend) visando a integração corporativa e segura com o Keycloak. 2) Construí um ETL com Apache Airflow na AWS para migrar dados de bancos on-premise, normalizando tabelas de camelCase para snake_case e realizando mapeamento de IDs de novos modelos de dados. 3) Otimizei a performance do sistema ao realocar cálculos vitais, outrora dispersos em código de interface/backend, em triggers enxutas no banco de dados.",
-            techs: ["PostgreSQL", "Airflow", "ETL", "Triggers"]
-        },
-        {
-            id: 3,
-            title: "Migração Cloud (On-premise para AWS EC2)",
-            icon: <Server size={32} className="challenge-icon green" />,
-            shortDesc: "Adoção do Docker para +30 serviços e criação de scripts automatizados de Backup.",
-            fullDesc: "Planejamento e migração de pouco mais de 30 serviços internos (APIs, Frontends e DBs) de ambientes on-premise para a nuvem da AWS EC2. Criei scripts Shell no Ubuntu vinculados a cron jobs para efetuar backups duplos diários direto no Amazon S3.  Serviços que rodavam em Bare Metal (PM2/Node) foram completamente dockerizados, com criação das Dockerfiles, Compose e repasses ao Docker Hub.",
-            techs: ["AWS EC2", "AWS S3", "Docker", "Shell Script", "Linux"]
-        },
-        {
-            id: 4,
-            title: "Implantação do Keycloak (NestJS Guards)",
-            icon: <CheckCircle size={32} className="challenge-icon yellow" />,
-            shortDesc: "Mapeamento completo do fluxo de permissões, otimização de cache e endpoint nativo.",
-            fullDesc: "Desafio focado em dominar os escopos do Keycloak e mapear credenciais de usuários para exposição via JSON Web Tokens. Como as permissões de acesso eram vitais, depurei gargalos onde o caching de excessivas claims quebravam o navegador. A solução envolveu consumir o endpoint nativo do próprio Keycloak para validar as autorizações dinamicamente a cada sessão logada, blindando por completo as rotas do backend em NestJS.",
-            techs: ["NestJS", "Keycloak", "Autenticação", "JWT"]
-        }
-    ];
+    const challenges = t.challenges.items.map((item, index) => ({
+        id: index + 1,
+        icon: CHALLENGE_ICONS[index],
+        ...item,
+    }));
 
     return (
         <section className="challenges-section" id="desafios">
@@ -51,9 +35,9 @@ export default function Challenges() {
                 transition={{ duration: 0.6 }}
             >
                 <div className="challenges-header">
-                    <h2 className="glow-text section-title">Desafios e Experiências</h2>
+                    <h2 className="glow-text section-title">{t.challenges.title}</h2>
                     <p className="challenges-subtitle">
-                        Cenários reais de migrações, arquitetura corporativa e resolução pragmática de problemas.
+                        {t.challenges.subtitle}
                     </p>
                 </div>
 

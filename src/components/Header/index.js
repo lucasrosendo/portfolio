@@ -1,21 +1,22 @@
-import React from 'react';
+import Link from 'next/link';
 import Menu from '../Menu';
-import Banner from './Banner';
+import LanguageSwitcher from '../LanguageSwitcher';
 import './styles.css';
 
+// Site-wide fixed nav bar. Lives in the root layout so it's present on every
+// route (home, /game-develop, /blog); the hero Banner stays home-page-only.
 export default function Header() {
   return (
-    <>
-      <header className="glass-header">
-        <div className="header-container">
-          <div className="logo-container">
-            <span className="logo glow-text">&lt;LR/&gt;</span>
-          </div>
-          <Menu />
+    <header className="glass-header">
+      <div className="header-container">
+        <div className="logo-container">
+          <Link href="/" className="logo glow-text">&lt;LR/&gt;</Link>
         </div>
-      </header>
-      <Banner />
-    </>
+        <div className="header-actions">
+          <Menu />
+          <LanguageSwitcher />
+        </div>
+      </div>
+    </header>
   );
 }
-

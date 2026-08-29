@@ -1,8 +1,12 @@
-import React from 'react';
+'use client';
+
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import './styles.css';
 
 export default function About() {
+  const { t } = useLanguage();
+
   const stacks = [
     { name: 'Node.js', url: 'https://nodejs.org/' },
     { name: 'NestJS', url: 'https://nestjs.com/' },
@@ -35,18 +39,15 @@ export default function About() {
             />
 
             <div className="description">
-              <h2 className="glow-text">Sobre Mim</h2>
-              <p>
-                Desenvolvedor Full Stack com 3 anos de experiência em soluções tecnológicas orientadas a dados, especializado em integração de sistemas e desenvolvimento de APIs robustas. Atualmente atuo como peça-chave na entrega de dashboards estratégicos e ferramentas de análise para tomada de decisão no Grupo Brasileiro.
-              </p>
-              <p>
-                Combino expertise técnica no backend (NestJS, Node.js) e frontend (React, Next.js) com habilidades em gestão de bancos de dados complexos (Oracle, PostgreSQL) e práticas modernas de DevOps. Minha trajetória prévia em vendas consolidou habilidades como comunicação clara, resolução ágil de problemas e foco autêntico no cliente.
-              </p>
+              <h2 className="glow-text">{t.about.title}</h2>
+              {t.about.paragraphs.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
             </div>
           </div>
 
           <div className="stacks">
-            <h3 className="glow-text">Stacks & Ferramentas</h3>
+            <h3 className="glow-text">{t.about.stacksTitle}</h3>
             <ul className="stack-grid">
               {stacks.map((stack, index) => (
                 <motion.li

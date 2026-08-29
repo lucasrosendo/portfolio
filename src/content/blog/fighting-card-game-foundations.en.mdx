@@ -1,0 +1,55 @@
+---
+slug: "fighting-card-game-foundations"
+title: "Devlog #1: Laying the Foundations for a Fighting-Style Card Game"
+date: "2026-08-29"
+author: "Lucas Rosendo"
+tags: ["game-develop", "devlog", "unity", "game-design", "architecture"]
+coverImage: "/images/devlogs/devlog-01-cover.png"
+excerpt: "The first technical and design pass on a card game built around fighting-discipline progression: ten different grading systems, a shared-stamina combat loop, and the architecture decisions needed to keep it all from collapsing under its own complexity."
+readingTime: "6 min"
+---
+
+## The Pitch
+
+The core idea is simple to say and hard to build: a card game where every character is defined by **two fighting styles** chosen from a roster of ten — boxing, wrestling, karate, BJJ, and others — each with its own authentic progression system (belts, weight-class records, win counts, time-and-test exams). Combat itself is turn-based, but with a twist: players can react to an opponent's declared move with an **instant defense**, paid for out of the same shared stamina pool they'll need for their own next turn.
+
+That single design choice — ten *genuinely different* progression systems layered on top of a reactive combat loop — is also the project's single biggest technical risk. This devlog covers the first real pass at taming it: the architecture plan, the risks we flagged, and what a hand-run combat simulation already taught us before a single UI screen exists.
+
+## Problem: Ten Progression Systems, One Codebase
+
+Belts don't work like weight-class records. Weight-class records don't work like win-count rankings. If we build each fighting style as its own bespoke system, we get ten times the code, ten times the bugs, and a UI team drowning in one-off screens.
+
+## Technical Solution: Data-Driven Everything
+
+The architecture leans hard on Unity `ScriptableObject`s and the Strategy pattern to keep that variety from leaking into the codebase:
+
+- **`CardDefinition`** (ScriptableObject) holds a card's identity — id, style, type, stamina cost, rarity, minimum tier — but *not* a fixed effect field. Card effects (flat damage, conditional percentage buffs, damage reduction with a floor, flat reduction, opponent debuffs) are too varied for a single struct, so each card holds a list of polymorphic `CardEffect` objects (`DamageEffect`, `DamageMultiplierBuffEffect`, `PercentDamageReductionEffect`, and so on), each implementing `Apply(CombatContext ctx)`. New effect types slot in without touching `CardDefinition` itself.
+- **`FightingStyleDefinition`** describes a style as an ordered list of `GradeDefinition`s (display name, unlocked card tier, build points, UI requirements) — so "Purple Belt," "Featherweight Contender," and "Level 3" are just data, not separate code paths.
+- **`IGradeProgressionEvaluator`** is the piece that actually collapses the ten-systems problem: instead of ten bespoke advancement rules, we expect **3-4 reusable archetypes** — a win-count evaluator (wrestling-style), a time-and-test evaluator (karate/BJJ-style belts), and a record-by-weight-class evaluator (boxing-style) — each `FightingStyleDefinition` just references which one it uses.
+- Combat resolution is a **State pattern with an observable interrupt point**: `AwaitingAction → ActionDeclared → ReactionWindow → ResolvingEffects → TurnEnd`, with instant defense implemented as an observer that intercepts the `ActionDeclared → ResolvingEffects` transition. That interrupt point is also where multiplayer would eventually hook in, without rewriting the state machine.
+
+The first system slated for prototyping is deliberately unglamorous: a pure C# combat core (turn state machine + stamina + effect pipeline) with **no `MonoBehaviour`, no `Update()`**, testable headlessly through Unity's Edit Mode Test Runner. UI comes after that core is proven stable, not before.
+
+## Player Impact: What a Hand-Simulated Fight Already Found
+
+Before writing a line of gameplay code, we ran combat entirely on paper — four manual rounds, Fighter A always acting first — to sanity-check the core rules:
+
+- Stamina caps at 5, regenerates +2 per own turn (capped, no overflow loss), with turn 1 as a fixed exception (both fighters start at 3).
+- Attacks, buffs/debuffs, *and* instant defense all draw from the same stamina pool.
+
+**Result:** 70 HP (Fighter A) vs. 75 HP (Fighter B) — close, despite A having the theoretical first-move advantage. That's an encouraging early signal that shared stamina plus reactive defense is doing its job of neutralizing "whoever attacks first wins."
+
+But the same four rounds surfaced two real problems worth fixing before this goes further:
+
+- **The "empty turn" bug.** Because instant defense spends from the *same* pool as a fighter's own upcoming action, it's possible to reach your turn with zero stamina and nothing playable — round 2 hit exactly this for Fighter B. A fully wasted turn doesn't feel good in a fighting game, so the fix under consideration is a guaranteed zero-cost card (a basic dodge or step-back, no damage) or a stamina floor that never bottoms out completely.
+- **A possible "reacts second" advantage.** The fighter who reacts mid-opponent's-turn gets to see the opponent's card *and* may have stamina left over for their own attack afterward; the fighter who acts first tends to spend stamina on their own move and has less left to defend with. Four rounds isn't enough data to confirm this pattern — it needs to run at scale.
+
+Which points directly at the next milestone: an **automated simulation harness**. Four manual rounds prove the concept; answering "does reacting second actually win more often?" needs thousands of automated simulations, not a spreadsheet. The existing hand-traced rounds already double as a ready-made regression test for that harness once it exists.
+
+## What's Still Open
+
+A few decisions are deliberately unresolved and will shape the technical scope by orders of magnitude — most importantly, whether competitive PvP needs to feel like a live match (real-time netcode, authoritative server, the reaction window seeing the opponent's card *live*) or can be asynchronous (both players commit blind, resolve simultaneously — a real change to the core "see and react" mechanic). That call has to land before any networked combat UI gets built, and it's the headline open question heading into the next devlog.
+
+---
+
+*This is the first entry in the `/game-develop` devlog series, tracking the build of a fighting-discipline card game from architecture through playtesting. Next up: the combat simulation harness and a first answer to the "who benefits from reacting" question.*

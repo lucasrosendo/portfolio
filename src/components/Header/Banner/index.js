@@ -1,9 +1,13 @@
-import React from 'react';
+'use client';
+
 import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import './styles.css';
 
 export default function Banner() {
+  const { t } = useLanguage();
+
   return (
     <section className="banner" id="home">
       <div className="banner-bg-glow"></div>
@@ -19,17 +23,23 @@ export default function Banner() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Olá, eu sou
+          {t.banner.greeting}
         </motion.h2>
 
-        <h1 className="glow-text">Desenvolvedor Web Full Stack</h1>
+        <h1 className="glow-text">{t.banner.role}</h1>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          Desenvolvedor Full Stack com 3 anos de experiência em integrações, APIs em <span className="highlight-trybe">NestJS/Node</span> e interfaces em <span className="highlight-trybe">React/Next</span>.
+          {t.banner.descriptionParts.map((part, index) =>
+            typeof part === 'string' ? (
+              <span key={index}>{part}</span>
+            ) : (
+              <span key={index} className="highlight-trybe">{part.highlight}</span>
+            )
+          )}
         </motion.p>
 
         <motion.a
@@ -44,11 +54,10 @@ export default function Banner() {
           transition={{ delay: 0.9 }}
         >
           <Download size={20} />
-          <span>Currículo</span>
+          <span>{t.banner.resumeBtn}</span>
         </motion.a>
 
       </motion.div>
     </section>
   );
 }
-
