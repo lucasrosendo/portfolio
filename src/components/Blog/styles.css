@@ -95,6 +95,17 @@
   padding: 60px 20px;
 }
 
+.post-card-note,
+.post-not-translated {
+  font-size: 0.8rem;
+  color: #fbbf24;
+  font-style: italic;
+}
+
+.post-not-translated {
+  margin-bottom: 24px;
+}
+
 /* Single post page */
 
 .post-page {

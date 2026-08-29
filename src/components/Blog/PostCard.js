@@ -1,18 +1,21 @@
 import Link from 'next/link';
 import { Calendar, Clock } from 'lucide-react';
-import { withBasePath } from '@/lib/blog';
+import { withBasePath } from '@/lib/assetPath';
 import './styles.css';
 
-function formatDate(dateString) {
+function formatDate(dateString, lang) {
   if (!dateString) return null;
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString(lang === 'pt' ? 'pt-BR' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
 }
 
-export default function PostCard({ post }) {
+// Presentational only — the caller (BlogIndexView) has already resolved
+// which locale variant of the post to show, including the fallback note
+// when a post has no translation yet.
+export default function PostCard({ post, lang, note }) {
   return (
     <Link href={`/blog/${post.slug}`} className="post-card glass-panel">
       {post.coverImage && (
@@ -32,7 +35,7 @@ export default function PostCard({ post }) {
         <div className="post-card-meta">
           {post.date && (
             <span>
-              <Calendar size={14} /> {formatDate(post.date)}
+              <Calendar size={14} /> {formatDate(post.date, lang)}
             </span>
           )}
           {post.readingTime && (
@@ -41,6 +44,7 @@ export default function PostCard({ post }) {
             </span>
           )}
         </div>
+        {note && <p className="post-card-note">{note}</p>}
       </div>
     </Link>
   );

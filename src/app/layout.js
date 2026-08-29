@@ -1,4 +1,5 @@
 import Header from '@/components/Header';
+import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import './globals.css';
 
 // Next's metadata API does NOT auto-prepend basePath for icons/manifest
@@ -25,8 +26,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <body>
-        <Header />
-        {children}
+        <LanguageProvider>
+          <Header />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

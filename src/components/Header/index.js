@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Menu from '../Menu';
+import LanguageSwitcher from '../LanguageSwitcher';
 import './styles.css';
 
 // Site-wide fixed nav bar. Lives in the root layout so it's present on every
@@ -11,7 +12,10 @@ export default function Header() {
         <div className="logo-container">
           <Link href="/" className="logo glow-text">&lt;LR/&gt;</Link>
         </div>
-        <Menu />
+        <div className="header-actions">
+          <Menu />
+          <LanguageSwitcher />
+        </div>
       </div>
     </header>
   );

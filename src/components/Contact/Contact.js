@@ -4,9 +4,12 @@ import { motion } from 'framer-motion';
 import { BsInstagram, BsLinkedin } from 'react-icons/bs';
 import { MdEmail } from 'react-icons/md';
 import { VscGithubInverted } from 'react-icons/vsc';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import './styles.css';
 
 function Contact() {
+  const { t } = useLanguage();
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -31,7 +34,7 @@ function Contact() {
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
       >
-        <motion.h2 variants={itemVariants} className="glow-text section-title">Contato</motion.h2>
+        <motion.h2 variants={itemVariants} className="glow-text section-title">{t.contact.title}</motion.h2>
 
         <motion.div variants={itemVariants} className="social-links">
           <a href="http://www.instagram.com/lucasrosendo0" target="_blank" rel="noreferrer" className="social-glass">

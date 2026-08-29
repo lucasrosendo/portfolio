@@ -3,35 +3,26 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Swords, Database, GitBranch, Layers, CircleAlert, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import './styles.css';
 
-const architecture = [
-  {
-    icon: <Database size={28} className="gd-icon cyan" />,
-    title: 'Data-driven cards',
-    desc: "CardDefinition ScriptableObjects hold identity only (id, style, cost, rarity, tier). Effects are polymorphic — a list of CardEffect objects (DamageEffect, PercentDamageReductionEffect, ...) each implementing Apply(ctx), so new effect types slot in without touching the card schema.",
-  },
-  {
-    icon: <Layers size={28} className="gd-icon purple" />,
-    title: 'Ten styles, three evaluators',
-    desc: 'Every fighting style is an ordered list of GradeDefinitions (belts, records, ranks — just data). An IGradeProgressionEvaluator strategy collapses ten bespoke advancement systems into three or four reusable archetypes: win-count, time-and-test, and record-by-weight-class.',
-  },
-  {
-    icon: <GitBranch size={28} className="gd-icon green" />,
-    title: 'Interruptible turn state machine',
-    desc: 'Combat resolution is a State pattern — AwaitingAction → ActionDeclared → ReactionWindow → ResolvingEffects → TurnEnd — with instant defense as an observer intercepting the declare-to-resolve transition. The same interrupt point is where networked play would eventually hook in.',
-  },
-];
-
-const progress = [
-  { done: true, text: 'Architecture pass: data-driven cards, styles, and grade evaluators defined' },
-  { done: true, text: 'Combat rules hand-simulated over 4 manual rounds (shared stamina + instant defense)' },
-  { done: false, text: 'Build the automated combat simulation harness (headless, C#, Edit Mode tests)' },
-  { done: false, text: 'Answer: does reacting second actually win more often?' },
-  { done: false, text: 'Lock the PvP networking model before touching combat UI' },
+// Icons are visual-only and language-independent; copy comes from the
+// translation dictionary, merged in below by index.
+const ARCHITECTURE_ICONS = [
+  <Database key="db" size={28} className="gd-icon cyan" />,
+  <Layers key="layers" size={28} className="gd-icon purple" />,
+  <GitBranch key="branch" size={28} className="gd-icon green" />,
 ];
 
 export default function GameDevelop() {
+  const { t } = useLanguage();
+  const gd = t.gameDevelop;
+
+  const architecture = gd.architecture.map((item, index) => ({
+    icon: ARCHITECTURE_ICONS[index],
+    ...item,
+  }));
+
   return (
     <section className="gd-section">
       <motion.div
@@ -41,17 +32,10 @@ export default function GameDevelop() {
         transition={{ duration: 0.6 }}
       >
         <Swords size={40} className="gd-hero-icon" />
-        <h1 className="glow-text">Building a Fighting-Style Card Game</h1>
-        <p>
-          A card game where every character is built from <strong>two fighting
-          styles</strong> chosen out of ten — boxing, wrestling, karate, BJJ,
-          and more — each with its own authentic progression system. Combat is
-          turn-based with a twist: an instant defense lets you react to an
-          opponent&apos;s move, paid out of the same shared stamina pool
-          you&apos;ll need for your own next turn.
-        </p>
+        <h1 className="glow-text">{gd.hero.title}</h1>
+        <p>{gd.hero.description}</p>
         <Link href="/blog" className="gd-cta glass-panel">
-          Read the devlog
+          {gd.hero.cta}
         </Link>
       </motion.div>
 
@@ -62,17 +46,12 @@ export default function GameDevelop() {
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="glow-text section-title">Architecture</h2>
-        <p className="gd-block-subtitle">
-          The single biggest technical risk isn&apos;t the cards — it&apos;s
-          keeping ten genuinely different progression systems from turning
-          into ten times the code. The plan leans on Unity ScriptableObjects
-          and the Strategy pattern to keep that variety in data, not code.
-        </p>
+        <h2 className="glow-text section-title">{gd.architectureTitle}</h2>
+        <p className="gd-block-subtitle">{gd.architectureSubtitle}</p>
 
         <div className="gd-grid">
-          {architecture.map((item) => (
-            <div key={item.title} className="gd-card">
+          {architecture.map((item, index) => (
+            <div key={index} className="gd-card">
               {item.icon}
               <h3>{item.title}</h3>
               <p>{item.desc}</p>
@@ -88,10 +67,10 @@ export default function GameDevelop() {
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="glow-text section-title">Progress</h2>
+        <h2 className="glow-text section-title">{gd.progressTitle}</h2>
         <ul className="gd-progress-list">
-          {progress.map((item) => (
-            <li key={item.text} className={item.done ? 'done' : ''}>
+          {gd.progress.map((item, index) => (
+            <li key={index} className={item.done ? 'done' : ''}>
               <CheckCircle2 size={20} />
               <span>{item.text}</span>
             </li>
@@ -108,15 +87,8 @@ export default function GameDevelop() {
       >
         <CircleAlert size={28} className="gd-callout-icon" />
         <div>
-          <h3>Open question: what does PvP feel like?</h3>
-          <p>
-            Real-time PvP with an authoritative server makes the reaction
-            window feel instant but costs the most to build. Asynchronous PvP
-            is far cheaper but changes the core mechanic — both players would
-            commit blind and resolve simultaneously instead of reacting live
-            to what the opponent plays. That call has to land before any
-            networked combat UI gets built.
-          </p>
+          <h3>{gd.callout.title}</h3>
+          <p>{gd.callout.desc}</p>
         </div>
       </motion.div>
     </section>

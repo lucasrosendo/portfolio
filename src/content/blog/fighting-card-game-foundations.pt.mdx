@@ -1,0 +1,55 @@
+---
+slug: "fighting-card-game-foundations"
+title: "Devlog #1: Lançando as Fundações de um Card Game de Luta"
+date: "2026-08-29"
+author: "Lucas Rosendo"
+tags: ["game-develop", "devlog", "unity", "game-design", "architecture"]
+coverImage: "/images/devlogs/devlog-01-cover.png"
+excerpt: "A primeira passada técnica e de design sobre um card game construído em torno da progressão de disciplinas de luta: dez sistemas de graduação diferentes, um loop de combate com estamina compartilhada e as decisões de arquitetura necessárias pra tudo isso não desmoronar sob o próprio peso."
+readingTime: "6 min"
+---
+
+## O Pitch
+
+A ideia central é simples de descrever e difícil de construir: um jogo de cartas onde cada personagem é definido por **duas modalidades de luta** escolhidas entre dez — boxe, wrestling, karatê, BJJ e outras — cada uma com seu próprio sistema de progressão autêntico (faixas, recordes por categoria de peso, contagem de vitórias, exames de tempo-e-teste). O combate em si é por turnos, mas com uma reviravolta: os jogadores podem reagir à jogada declarada do oponente com uma **defesa instantânea**, paga com o mesmo pool de estamina compartilhado que vão precisar no próprio turno seguinte.
+
+Essa única decisão de design — dez sistemas de progressão *genuinamente diferentes* sobrepostos a um loop de combate reativo — também é o maior risco técnico do projeto. Este devlog cobre a primeira passada real para domar isso: o plano de arquitetura, os riscos sinalizados e o que uma simulação manual de combate já ensinou antes de existir uma única tela de UI.
+
+## Problema: Dez Sistemas de Progressão, Um Só Código-Base
+
+Faixas não funcionam como recordes por categoria de peso. Recordes por categoria de peso não funcionam como rankings por contagem de vitórias. Se construirmos cada estilo de luta como um sistema sob medida, temos dez vezes mais código, dez vezes mais bugs e uma equipe de UI afogada em telas feitas sob encomenda.
+
+## Solução Técnica: Tudo Orientado a Dados
+
+A arquitetura se apoia fortemente em `ScriptableObject`s da Unity e no padrão Strategy para impedir que essa variedade vaze para o código:
+
+- **`CardDefinition`** (ScriptableObject) guarda a identidade de uma carta — id, estilo, tipo, custo de estamina, raridade, tier mínimo — mas *não* um campo de efeito fixo. Os efeitos das cartas (dano fixo, buffs percentuais condicionais, redução de dano com piso mínimo, redução fixa, debuffs no oponente) são variados demais para caber numa struct única, então cada carta guarda uma lista de objetos `CardEffect` polimórficos (`DamageEffect`, `DamageMultiplierBuffEffect`, `PercentDamageReductionEffect`, entre outros), cada um implementando `Apply(CombatContext ctx)`. Novos tipos de efeito entram sem tocar em `CardDefinition`.
+- **`FightingStyleDefinition`** descreve um estilo como uma lista ordenada de `GradeDefinition`s (nome de exibição, tier de carta desbloqueado, pontos de build, requisitos de UI) — então "Faixa Roxa", "Peso Pena Contender" e "Nível 3" são só dados, não caminhos de código separados.
+- **`IGradeProgressionEvaluator`** é a peça que de fato resolve o problema dos dez sistemas: em vez de dez regras de avanço sob medida, esperamos **3-4 arquétipos reaproveitáveis** — um avaliador por contagem de vitórias (estilo wrestling), um avaliador de tempo-e-teste (faixas estilo karatê/BJJ) e um avaliador de recorde por categoria de peso (estilo boxe) — cada `FightingStyleDefinition` só referencia qual avaliador usar.
+- A resolução de combate é um **padrão State com um ponto de interrupção observável**: `AwaitingAction → ActionDeclared → ReactionWindow → ResolvingEffects → TurnEnd`, com a defesa instantânea implementada como um observer que intercepta a transição `ActionDeclared → ResolvingEffects`. Esse ponto de interrupção também é onde o multiplayer eventualmente se encaixaria, sem reescrever a máquina de estados.
+
+O primeiro sistema previsto para prototipagem é propositalmente pouco glamouroso: um núcleo de combate em **C# puro** (máquina de estados de turno + estamina + pipeline de efeitos) **sem `MonoBehaviour`, sem `Update()`**, testável de forma headless pelo Test Runner em Edit Mode da Unity. A UI vem depois desse núcleo provado estável, não antes.
+
+## Impacto no Jogador: O Que uma Luta Simulada à Mão Já Revelou
+
+Antes de escrever uma linha de código de gameplay, rodamos o combate inteiramente no papel — quatro rodadas manuais, com o Lutador A sempre agindo primeiro — para validar as regras centrais:
+
+- A estamina tem teto de 5, regenera +2 por turno próprio (com teto, sem perda de excedente), com o turno 1 como exceção fixa (os dois começam com 3).
+- Ataques, buffs/debuffs *e* defesa instantânea saem todos do mesmo pool de estamina.
+
+**Resultado:** 70 HP (Lutador A) contra 75 HP (Lutador B) — próximo, apesar da vantagem teórica de A por agir primeiro. É um sinal inicial encorajador de que estamina compartilhada mais defesa reativa estão cumprindo o papel de neutralizar o "quem ataca primeiro vence".
+
+Mas as mesmas quatro rodadas revelaram dois problemas reais que valem a pena corrigir antes de avançar:
+
+- **O bug do "turno vazio".** Como a defesa instantânea gasta do mesmo pool da própria ação futura do lutador, é possível chegar ao seu turno com estamina zerada e nada jogável — a rodada 2 caiu exatamente nisso para o Lutador B. Um turno totalmente perdido não é uma boa sensação num jogo de luta, então a correção em consideração é uma carta garantida de custo zero (uma esquiva básica ou um passo atrás, sem dano) ou um piso de estamina que nunca zera de vez.
+- **Uma possível vantagem de "quem reage por último".** O lutador que reage no meio do turno do oponente já viu a carta do adversário e ainda pode sobrar estamina para o próprio ataque depois; quem age primeiro tende a gastar estamina no próprio golpe e sobra menos para se defender depois. Quatro rodadas não são suficientes para confirmar esse padrão — precisa rodar em escala.
+
+O que aponta direto para o próximo marco: um **harness de simulação automatizada**. Quatro rodadas manuais provam o conceito; responder "reagir em segundo realmente vence mais?" exige milhares de simulações automatizadas, não uma planilha. As rodadas já traçadas à mão já servem como um teste de regressão pronto para esse harness assim que ele existir.
+
+## O Que Ainda Está em Aberto
+
+Algumas decisões estão propositalmente em aberto e vão mudar o escopo técnico em ordens de grandeza — a mais importante: se o PvP competitivo precisa parecer uma partida ao vivo (netcode em tempo real, servidor autoritativo, a janela de reação vendo a carta do oponente ao vivo) ou pode ser assíncrono (os dois jogadores comitam às cegas, resolvendo simultaneamente — uma mudança real na mecânica central de "ver e reagir"). Essa decisão precisa ser tomada antes de qualquer UI de combate em rede ser construída, e é a pergunta em destaque para o próximo devlog.
+
+---
+
+*Este é o primeiro post da série de devlogs de `/game-develop`, acompanhando a construção de um card game de disciplinas de luta, da arquitetura aos testes de jogabilidade. No próximo: o harness de simulação de combate e uma primeira resposta pra pergunta de "quem se beneficia ao reagir".*
