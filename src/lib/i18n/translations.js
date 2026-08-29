@@ -69,37 +69,29 @@ export const translations = {
       hero: {
         title: 'Construindo um Card Game de Luta',
         description:
-          'Um jogo de cartas onde cada personagem é montado a partir de duas modalidades de luta escolhidas entre dez — boxe, wrestling, karatê, BJJ e outras — cada uma com seu próprio sistema de progressão autêntico. O combate é por turnos com um adicional: uma defesa instantânea permite reagir à jogada do oponente, paga com a mesma estamina compartilhada que você vai precisar no seu próprio próximo turno.',
+          'Um jogo de cartas onde cada personagem é montado a partir de duas modalidades de luta escolhidas entre dez — boxe, wrestling, karatê, BJJ e outras. O combate acontece em turnos, mas com uma reação instantânea: dá pra se defender no meio da jogada do oponente, usando a mesma energia que você vai precisar no seu próprio turno.',
         cta: 'Ler o devlog',
       },
-      architectureTitle: 'Arquitetura',
-      architectureSubtitle:
-        'O maior risco técnico não são as cartas — é evitar que dez sistemas de progressão genuinamente diferentes virem dez vezes mais código. O plano se apoia em ScriptableObjects da Unity e no padrão Strategy para manter essa variedade nos dados, não no código.',
-      architecture: [
+      mechanicsTitle: 'Sobre o Jogo',
+      mechanicsSubtitle:
+        'Um resumo do que já está definido sobre o jogo e como ele deve ser jogado.',
+      mechanics: [
         {
-          title: 'Cartas orientadas a dados',
-          desc: 'ScriptableObjects CardDefinition guardam só a identidade da carta (id, estilo, custo, raridade, tier). Os efeitos são polimórficos — uma lista de objetos CardEffect (DamageEffect, PercentDamageReductionEffect, ...), cada um implementando Apply(ctx) — então novos tipos de efeito entram sem mexer no schema da carta.',
+          title: 'Duas modalidades por lutador',
+          desc: 'Cada personagem combina duas das dez modalidades de luta disponíveis — boxe, wrestling, karatê, BJJ, muay thai e outras — cada uma trazendo seu próprio conjunto de cartas e estilo de jogo.',
         },
         {
-          title: 'Dez estilos, três avaliadores',
-          desc: 'Cada estilo de luta é uma lista ordenada de GradeDefinitions (faixas, recordes, ranks — só dados). Uma estratégia IGradeProgressionEvaluator reduz dez sistemas de avanço sob medida a três ou quatro arquétipos reaproveitáveis: contagem de vitórias, tempo-e-exame e recorde por categoria de peso.',
+          title: 'Progressão por modalidade',
+          desc: 'Cada estilo evolui do seu próprio jeito — faixas, recordes por categoria de peso, ranking por vitórias — desbloqueando cartas mais fortes conforme o lutador avança.',
         },
         {
-          title: 'Máquina de turnos interruptível',
-          desc: 'A resolução de combate é um padrão State — AguardandoAção → AçãoDeclarada → JanelaDeReação → ResolvendoEfeitos → FimDeTurno — com a defesa instantânea como um observer que intercepta a transição de declarar para resolver. O mesmo ponto de interrupção é onde o modo online eventualmente se encaixaria.',
+          title: 'Combate por turnos com reação',
+          desc: 'Além da sua própria jogada, dá pra reagir ao ataque do adversário com uma defesa instantânea — só que ela consome a mesma energia que você vai precisar no turno seguinte, criando decisões de risco a cada rodada.',
         },
       ],
-      progressTitle: 'Progresso',
-      progress: [
-        { done: true, text: 'Arquitetura definida: cartas, estilos e avaliadores de graduação orientados a dados' },
-        { done: true, text: 'Regras de combate simuladas manualmente em 4 rodadas (estamina compartilhada + defesa instantânea)' },
-        { done: false, text: 'Construir o harness de simulação automatizada de combate (C# headless, testes em Edit Mode)' },
-        { done: false, text: 'Responder: reagir em segundo realmente vence mais?' },
-        { done: false, text: 'Definir o modelo de rede do PvP antes de mexer na UI de combate' },
-      ],
-      callout: {
-        title: 'Pergunta em aberto: qual é a sensação do PvP?',
-        desc: 'PvP em tempo real com servidor autoritativo faz a janela de reação parecer instantânea, mas custa mais caro pra construir. PvP assíncrono é bem mais barato, mas muda a mecânica principal — os dois jogadores comitariam às cegas e resolveriam simultaneamente, em vez de reagir ao vivo à jogada do oponente. Essa decisão precisa ser tomada antes de qualquer UI de combate em rede.',
+      roadmap: {
+        title: 'Roadmap em breve',
+        desc: 'O roadmap detalhado de desenvolvimento ainda está sendo desenhado. Assim que as próximas etapas estiverem definidas, elas aparecem por aqui — enquanto isso, acompanhe o progresso pelo devlog.',
       },
     },
     blog: {
@@ -177,37 +169,28 @@ export const translations = {
       hero: {
         title: 'Building a Fighting-Style Card Game',
         description:
-          "A card game where every character is built from two fighting styles chosen out of ten — boxing, wrestling, karate, BJJ, and more — each with its own authentic progression system. Combat is turn-based with a twist: an instant defense lets you react to an opponent's move, paid out of the same shared stamina pool you'll need for your own next turn.",
+          "A card game where every character is built from two fighting styles chosen out of ten — boxing, wrestling, karate, BJJ, and more. Combat is turn-based with a twist: an instant defense lets you react to an opponent's move, paid out of the same energy you'll need for your own next turn.",
         cta: 'Read the devlog',
       },
-      architectureTitle: 'Architecture',
-      architectureSubtitle:
-        "The single biggest technical risk isn't the cards — it's keeping ten genuinely different progression systems from turning into ten times the code. The plan leans on Unity ScriptableObjects and the Strategy pattern to keep that variety in data, not code.",
-      architecture: [
+      mechanicsTitle: 'About the Game',
+      mechanicsSubtitle: 'A quick rundown of what has been defined so far about the game and how it plays.',
+      mechanics: [
         {
-          title: 'Data-driven cards',
-          desc: 'CardDefinition ScriptableObjects hold identity only (id, style, cost, rarity, tier). Effects are polymorphic — a list of CardEffect objects (DamageEffect, PercentDamageReductionEffect, ...) each implementing Apply(ctx), so new effect types slot in without touching the card schema.',
+          title: 'Two styles per fighter',
+          desc: 'Each character combines two of the ten available fighting styles — boxing, wrestling, karate, BJJ, muay thai and more — each bringing its own set of cards and playstyle.',
         },
         {
-          title: 'Ten styles, three evaluators',
-          desc: 'Every fighting style is an ordered list of GradeDefinitions (belts, records, ranks — just data). An IGradeProgressionEvaluator strategy collapses ten bespoke advancement systems into three or four reusable archetypes: win-count, time-and-test, and record-by-weight-class.',
+          title: 'Progression per style',
+          desc: 'Every style advances in its own way — belts, weight-class records, win-count rankings — unlocking stronger cards as the fighter progresses.',
         },
         {
-          title: 'Interruptible turn state machine',
-          desc: 'Combat resolution is a State pattern — AwaitingAction → ActionDeclared → ReactionWindow → ResolvingEffects → TurnEnd — with instant defense as an observer intercepting the declare-to-resolve transition. The same interrupt point is where networked play would eventually hook in.',
+          title: 'Turn-based combat with reactions',
+          desc: "Beyond your own move, you can react to the opponent's attack with an instant defense — but it costs the same energy you'll need on your next turn, creating a risk decision every round.",
         },
       ],
-      progressTitle: 'Progress',
-      progress: [
-        { done: true, text: 'Architecture defined: data-driven cards, styles, and grade evaluators' },
-        { done: true, text: 'Combat rules hand-simulated over 4 manual rounds (shared stamina + instant defense)' },
-        { done: false, text: 'Build the automated combat simulation harness (headless C#, Edit Mode tests)' },
-        { done: false, text: 'Answer: does reacting second actually win more often?' },
-        { done: false, text: 'Lock the PvP networking model before touching combat UI' },
-      ],
-      callout: {
-        title: 'Open question: what does PvP feel like?',
-        desc: "Real-time PvP with an authoritative server makes the reaction window feel instant but costs the most to build. Asynchronous PvP is far cheaper but changes the core mechanic — both players would commit blind and resolve simultaneously instead of reacting live to what the opponent plays. That call has to land before any networked combat UI gets built.",
+      roadmap: {
+        title: 'Roadmap coming soon',
+        desc: "The detailed development roadmap is still being drafted. As soon as the next steps are defined, they'll show up here — in the meantime, follow progress through the devlog.",
       },
     },
     blog: {

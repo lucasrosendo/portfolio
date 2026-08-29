@@ -107,38 +107,6 @@
   color: #10b981;
 }
 
-.gd-progress-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.gd-progress-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.gd-progress-list li svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: rgba(255, 255, 255, 0.2);
-}
-
-.gd-progress-list li.done {
-  color: var(--text-primary);
-}
-
-.gd-progress-list li.done svg {
-  color: #10b981;
-}
-
 .gd-callout {
   display: flex;
   gap: 20px;
