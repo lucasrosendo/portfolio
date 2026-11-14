@@ -1,0 +1,76 @@
+---
+slug: "fighting-card-game-turn-resolver-and-deck"
+title: "Devlog #2: Uncapped Stamina, a Single TurnResolver, and the Deck on the Way"
+date: "2026-11-13"
+author: "Lucas Rosendo"
+tags: ["game-develop", "devlog", "unity", "game-design", "architecture", "ai-tooling"]
+coverImage: "/images/devlogs/devlog-02-cover.png"
+excerpt: "Since the first devlog, the stamina rule was rewritten, buffs and debuffs now carry to the next hit, combat got a single TurnResolver shared with the Monte Carlo simulator, and decision #29 replaced the fixed hand with a draw/discard deck."
+readingTime: "6 min"
+---
+
+## Where We Left Off
+
+In Devlog #1 we left two questions open: the "empty turn" bug and the suspected advantage of reacting last. Since then the project has moved off paper: there is a playable combat scene (`CombatDemo`), real ScriptableObjects for cards and styles, hand/stamina/turn-log UI, a reactive defense prompt, and a Monte Carlo simulator. This post covers what changed, ordered by what matters to players and to developers.
+
+## Stamina: No Fixed Cap
+
+**Problem.** The original rule (cap of 5, turn 1 at 3) came out of the manual playtest and turned out to be arbitrary. Worse, the "5" was never hardcoded, it only lived in the two test characters' data.
+
+**Solution.** Stamina now **always starts at 5** and has no technical ceiling. `Fighter.MaxStamina` became mutable (`IncreaseMaxStamina`), and a new `Rest` card type, **Descanso**, costs 0, raises the caster's ceiling and restores the same amount immediately. It is an `IncreaseMaxStaminaEffect`, one more polymorphic `CardEffect` plugged in without touching `CardDefinition`.
+
+**Player impact.** Resting stops being "pass the turn" and becomes an investment: give up acting now to spend more in later turns. How much each Descanso grants (currently +1, a placeholder) and how many each character carries are still to be tuned.
+
+The manual playtest trace and its regression tests stay untouched as a historical record (turn 1 = 3, cap = 5). Only the asset-backed test was rewritten to validate the new rule.
+
+## Clearer, Fairer Combat
+
+A string of fixes that came from actually playing the demo:
+
+- **HP bar** to track fighter health during the fight.
+- **Card effect summary** shown to the player (issue #27).
+- **Two-step reactive defense**: first "defend?", then "which card?", from playtest feedback.
+- **Hand overflow fixed**: the Descanso card was barely visible and hard to click off-screen.
+- **Buffs and debuffs carry to the next hit.** Previously, playing Foco Mental or Quebra de Postura alone multiplied 0 damage and ended the turn, so it did nothing. Now the card stays pending and is applied right after the attack card's own effects, before the defense (same order as round 4 of the original trace). Playing a buff no longer ends the turn, and the same card can't stack on itself while pending.
+- **Defense cards blocked on your own turn.** Instant-defense cards only exist inside the reaction window; on your turn they are disabled.
+
+## A Single TurnResolver (Issue #30)
+
+**Problem.** Turn logic was duplicated: some in `CombatDemoController`, some in `MatchSimulator`. Duplicated rules are worse than duplicated code: the simulator that calibrates balance could drift from the game the player sees.
+
+**Solution.** We extracted one **`TurnResolver`** in `Game.Combat`, used by both the Monte Carlo simulator and the demo. It owns:
+
+- alternating initiative;
+- per-round stamina regen;
+- the stamina floor;
+- the reaction window and damage;
+- carrying buffs/debuffs to the next hit.
+
+A `PlayedCard` bridges `CardData` (pure core) and `CardDefinition` (asset). The EditMode suite sits at **112 passing tests**, including the new `TurnResolverTests`.
+
+**Visible in the demo.** With alternating initiative, at the round boundary the opponent acts **twice in a row** (end of their round, start of the next). That is expected behavior of the rule, not a bug, but it is exactly the kind of thing that only shows up when the real rule runs, and the simulator now sees it identically.
+
+## Decision #29: Draw/Discard Deck
+
+The fixed hand inherited from the playtest (`Fighter.Hand` holding every card of the character) will be replaced by a **deck**, decided on 2026-11-13:
+
+- the player **builds the deck**, at a fixed size, from unlocked cards of their two chosen styles;
+- the **hand is 5 cards**, refilled at the start of each fighter's turn;
+- used cards go to the **discard pile**;
+- **no reshuffle**: when the deck runs out, the hand is no longer refilled. This is "fatigue", and it gives combat a natural turn limit.
+
+Still open: the deck size N (to be calibrated in the simulator) and what happens when a fighter has no playable cards left, including the interaction with Descanso and the stamina floor. Since drawing becomes part of the turn, it will live in `TurnResolver`, and the AI will decide only among cards in hand.
+
+## Tooling: Unity Skills for Agents
+
+The repo also gained a set of **Unity skills for coding agents**: animation, build-pipeline, build-size, input-system, navmesh, physics, scriptableobjects and tilemap-2d. They are short best-practice guides the assistant loads per task, so changes to areas like input or ScriptableObjects follow project conventions instead of guesswork.
+
+## Roadmap
+
+- **M4.5, playable PvE** (issues #30 to #37): single resolver (done), balance simulator, opponent AI, deck building, card set.
+- **PvP and networking are postponed**: the live-versus-async question from Devlog #1 returns only once PvE is solid.
+- **Further out**: animated 3D fighters actually performing the card moves, instead of just numbers in a log.
+
+---
+
+*Next devlog: the simulator building decks to calibrate N, and the first opponent AI deciding with hidden information.*
