@@ -1,0 +1,130 @@
+1:"$Sreact.fragment"
+2:I[85322,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js","/portfolio/_next/static/chunks/3q7ymhu2dv51h.js"],"default"]
+3:T1769,<h2>Where We Left Off</h2>
+<p>In Devlog #1 we left two questions open: the "empty turn" bug and the suspected advantage of reacting last. Since then the project has moved off paper: there is a playable combat scene (<code>CombatDemo</code>), real ScriptableObjects for cards and styles, hand/stamina/turn-log UI, a reactive defense prompt, and a Monte Carlo simulator. This post covers what changed, ordered by what matters to players and to developers.</p>
+<h2>Stamina: No Fixed Cap</h2>
+<p><strong>Problem.</strong> The original rule (cap of 5, turn 1 at 3) came out of the manual playtest and turned out to be arbitrary. Worse, the "5" was never hardcoded, it only lived in the two test characters' data.</p>
+<p><strong>Solution.</strong> Stamina now <strong>always starts at 5</strong> and has no technical ceiling. <code>Fighter.MaxStamina</code> became mutable (<code>IncreaseMaxStamina</code>), and a new <code>Rest</code> card type, <strong>Descanso</strong>, costs 0, raises the caster's ceiling and restores the same amount immediately. It is an <code>IncreaseMaxStaminaEffect</code>, one more polymorphic <code>CardEffect</code> plugged in without touching <code>CardDefinition</code>.</p>
+<p><strong>Player impact.</strong> Resting stops being "pass the turn" and becomes an investment: give up acting now to spend more in later turns. How much each Descanso grants (currently +1, a placeholder) and how many each character carries are still to be tuned.</p>
+<p>The manual playtest trace and its regression tests stay untouched as a historical record (turn 1 = 3, cap = 5). Only the asset-backed test was rewritten to validate the new rule.</p>
+<h2>Clearer, Fairer Combat</h2>
+<p>A string of fixes that came from actually playing the demo:</p>
+<ul>
+<li><strong>HP bar</strong> to track fighter health during the fight.</li>
+<li><strong>Card effect summary</strong> shown to the player (issue #27).</li>
+<li><strong>Two-step reactive defense</strong>: first "defend?", then "which card?", from playtest feedback.</li>
+<li><strong>Hand overflow fixed</strong>: the Descanso card was barely visible and hard to click off-screen.</li>
+<li><strong>Buffs and debuffs carry to the next hit.</strong> Previously, playing Foco Mental or Quebra de Postura alone multiplied 0 damage and ended the turn, so it did nothing. Now the card stays pending and is applied right after the attack card's own effects, before the defense (same order as round 4 of the original trace). Playing a buff no longer ends the turn, and the same card can't stack on itself while pending.</li>
+<li><strong>Defense cards blocked on your own turn.</strong> Instant-defense cards only exist inside the reaction window; on your turn they are disabled.</li>
+</ul>
+<h2>A Single TurnResolver (Issue #30)</h2>
+<p><strong>Problem.</strong> Turn logic was duplicated: some in <code>CombatDemoController</code>, some in <code>MatchSimulator</code>. Duplicated rules are worse than duplicated code: the simulator that calibrates balance could drift from the game the player sees.</p>
+<p><strong>Solution.</strong> We extracted one <strong><code>TurnResolver</code></strong> in <code>Game.Combat</code>, used by both the Monte Carlo simulator and the demo. It owns:</p>
+<ul>
+<li>alternating initiative;</li>
+<li>per-round stamina regen;</li>
+<li>the stamina floor;</li>
+<li>the reaction window and damage;</li>
+<li>carrying buffs/debuffs to the next hit.</li>
+</ul>
+<p>A <code>PlayedCard</code> bridges <code>CardData</code> (pure core) and <code>CardDefinition</code> (asset). The EditMode suite sits at <strong>112 passing tests</strong>, including the new <code>TurnResolverTests</code>.</p>
+<p><strong>Visible in the demo.</strong> With alternating initiative, at the round boundary the opponent acts <strong>twice in a row</strong> (end of their round, start of the next). That is expected behavior of the rule, not a bug, but it is exactly the kind of thing that only shows up when the real rule runs, and the simulator now sees it identically.</p>
+<h2>Decision #29: Draw/Discard Deck</h2>
+<p>The fixed hand inherited from the playtest (<code>Fighter.Hand</code> holding every card of the character) will be replaced by a <strong>deck</strong>, decided on 2026-11-13:</p>
+<ul>
+<li>the player <strong>builds the deck</strong>, at a fixed size, from unlocked cards of their two chosen styles;</li>
+<li>the <strong>hand is 5 cards</strong>, refilled at the start of each fighter's turn;</li>
+<li>used cards go to the <strong>discard pile</strong>;</li>
+<li><strong>no reshuffle</strong>: when the deck runs out, the hand is no longer refilled. This is "fatigue", and it gives combat a natural turn limit.</li>
+</ul>
+<p>Still open: the deck size N (to be calibrated in the simulator) and what happens when a fighter has no playable cards left, including the interaction with Descanso and the stamina floor. Since drawing becomes part of the turn, it will live in <code>TurnResolver</code>, and the AI will decide only among cards in hand.</p>
+<h2>Tooling: Unity Skills for Agents</h2>
+<p>The repo also gained a set of <strong>Unity skills for coding agents</strong>: animation, build-pipeline, build-size, input-system, navmesh, physics, scriptableobjects and tilemap-2d. They are short best-practice guides the assistant loads per task, so changes to areas like input or ScriptableObjects follow project conventions instead of guesswork.</p>
+<h2>Roadmap</h2>
+<ul>
+<li><strong>M4.5, playable PvE</strong> (issues #30 to #37): single resolver (done), balance simulator, opponent AI, deck building, card set.</li>
+<li><strong>PvP and networking are postponed</strong>: the live-versus-async question from Devlog #1 returns only once PvE is solid.</li>
+<li><strong>Further out</strong>: animated 3D fighters actually performing the card moves, instead of just numbers in a log.</li>
+</ul>
+<hr>
+<p><em>Next devlog: the simulator building decks to calibrate N, and the first opponent AI deciding with hidden information.</em></p>4:T18e0,<h2>Onde Paramos</h2>
+<p>No Devlog #1 deixamos duas perguntas abertas: o bug do "turno vazio" e a suspeita de vantagem pra quem reage por último. De lá pra cá, o projeto saiu do papel: há uma cena de combate jogável (<code>CombatDemo</code>), ScriptableObjects reais para cartas e estilos, UI de mão/estamina/log de turno, um prompt de defesa reativa e um simulador Monte Carlo. Este post cobre o que mudou nas últimas semanas, na ordem em que importa pra quem joga e pra quem desenvolve.</p>
+<h2>Estamina: Sem Teto Fixo</h2>
+<p><strong>Problema.</strong> A regra original (teto de 5, turno 1 com 3) nasceu do playtest manual e se mostrou arbitrária. Pior: o "5" nunca esteve cravado no código, só nos dados dos dois personagens de teste.</p>
+<p><strong>Solução.</strong> A estamina agora <strong>sempre começa em 5</strong> e não tem teto técnico. <code>Fighter.MaxStamina</code> virou mutável (<code>IncreaseMaxStamina</code>) e uma nova carta de tipo <code>Rest</code>, a <strong>Descanso</strong>, custa 0, aumenta o teto de quem a joga e restaura o mesmo valor na hora. O efeito é um <code>IncreaseMaxStaminaEffect</code>, mais um <code>CardEffect</code> polimórfico plugado sem mexer em <code>CardDefinition</code>.</p>
+<p><strong>Impacto no jogador.</strong> Descansar deixou de ser "passar a vez" e virou investimento: você abre mão de agir agora pra poder gastar mais nos turnos seguintes. Quanto cada Descanso concede (hoje +1, placeholder) e quantas cada personagem leva ainda serão calibrados.</p>
+<p>O trace do playtest manual e seus testes de regressão continuam intocados, como registro histórico (turno 1 = 3, teto = 5). Só o teste baseado nos assets reais foi reescrito pra validar a regra nova.</p>
+<h2>Combate Mais Legível e Mais Justo</h2>
+<p>Uma sequência de correções vindas de testar a demo de verdade:</p>
+<ul>
+<li><strong>Barra de HP</strong> para acompanhar a saúde dos lutadores durante a luta.</li>
+<li><strong>Resumo do efeito</strong> de cada carta mostrado ao jogador (issue #27).</li>
+<li><strong>Defesa reativa em duas etapas</strong>: primeiro "defender?", depois "qual carta?", a partir de feedback de playtest.</li>
+<li><strong>Overflow da mão corrigido</strong>: a carta Descanso ficava quase invisível e difícil de clicar fora da tela.</li>
+<li><strong>Buffs e debuffs carregam pro próximo golpe.</strong> Antes, jogar Foco Mental ou Quebra de Postura sozinho multiplicava dano 0 e encerrava o turno, ou seja, não fazia nada. Agora a carta fica pendente e é aplicada logo após os efeitos da carta de ataque, antes da defesa (mesma ordem da rodada 4 do trace original). Jogar um buff não encerra o turno, e a mesma carta não empilha em si mesma enquanto pendente.</li>
+<li><strong>Defesas bloqueadas no turno próprio.</strong> Cartas de defesa instantânea só existem dentro da janela de reação; no seu turno ficam desabilitadas.</li>
+</ul>
+<h2>TurnResolver Único (Issue #30)</h2>
+<p><strong>Problema.</strong> A lógica de turno vivia duplicada: um pouco em <code>CombatDemoController</code>, outro pouco em <code>MatchSimulator</code>. Pior que código duplicado é regra duplicada: o simulador que calibra o balanceamento podia divergir do jogo que o jogador vê.</p>
+<p><strong>Solução.</strong> Extraímos um único <strong><code>TurnResolver</code></strong> em <code>Game.Combat</code>, usado tanto pelo simulador Monte Carlo quanto pela demo. Ele concentra:</p>
+<ul>
+<li>iniciativa alternada;</li>
+<li>regeneração de estamina por rodada;</li>
+<li>piso de estamina;</li>
+<li>janela de reação e dano;</li>
+<li>carregamento de buff/debuff pro próximo golpe.</li>
+</ul>
+<p>Um <code>PlayedCard</code> faz a ponte entre <code>CardData</code> (núcleo puro) e <code>CardDefinition</code> (asset). A suíte de EditMode está em <strong>112 testes passando</strong>, incluindo os novos <code>TurnResolverTests</code>.</p>
+<p><strong>Efeito visível na demo.</strong> Com a iniciativa alternada, na virada de rodada o oponente age <strong>duas vezes seguidas</strong> (fim da rodada dele, início da seguinte). É comportamento esperado da regra, não bug, mas é exatamente o tipo de coisa que só aparece quando o jogo roda a regra real, e que o simulador agora enxerga igual.</p>
+<h2>Decisão #29: Baralho com Compra e Descarte</h2>
+<p>A mão fixa herdada do playtest (<code>Fighter.Hand</code> com todas as cartas do personagem) vai ser substituída por um <strong>baralho</strong>, decidido em 13/11/2026:</p>
+<ul>
+<li>o jogador <strong>monta o baralho</strong>, de tamanho fixo, com cartas desbloqueadas dos dois estilos escolhidos;</li>
+<li>a <strong>mão é de 5 cartas</strong>, completada no início do turno de cada lutador;</li>
+<li>carta usada vai pro <strong>descarte</strong>;</li>
+<li><strong>sem reembaralhar</strong>: quando o baralho acaba, a mão não é reposta. É a "fadiga", que dá ao combate um limite natural de turnos.</li>
+</ul>
+<p>Em aberto: o tamanho N do baralho (a calibrar no simulador) e o que acontece quando um lutador fica sem cartas jogáveis, incluindo a interação com Descanso e com o piso de estamina. Como a compra entra na fase de turno, ela vai morar no <code>TurnResolver</code>, e a IA passa a decidir só entre as cartas na mão.</p>
+<h2>Ferramentas: Skills de Unity para Agentes</h2>
+<p>O repositório também ganhou um conjunto de <strong>skills de Unity para agentes de código</strong>: animation, build-pipeline, build-size, input-system, navmesh, physics, scriptableobjects e tilemap-2d. São guias curtos de boas práticas que o assistente carrega conforme a tarefa, pra que mudanças em áreas como input ou ScriptableObjects sigam as convenções do projeto em vez de adivinhar.</p>
+<h2>Roadmap</h2>
+<ul>
+<li><strong>M4.5, PvE jogável</strong> (issues #30 a #37): resolvedor único (feito), simulador de balanceamento, IA de oponente, montagem de baralho, conjunto de cartas.</li>
+<li><strong>PvP e rede ficam adiados</strong>: a decisão ao vivo versus assíncrono do Devlog #1 só volta à mesa depois que o PvE estiver sólido.</li>
+<li><strong>Mais adiante</strong>: lutadores 3D animados executando de fato os golpes das cartas, no lugar de só números no log.</li>
+</ul>
+<hr>
+<p><em>Próximo devlog: o simulador montando baralhos pra calibrar N, e a primeira IA de oponente decidindo com informação oculta.</em></p>9:X
+e:X
+e:C
+0:{"buildId":"RddaUhEEu92RVmtLrTFe0","data":[{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"entry":{"slug":"fighting-card-game-turn-resolver-and-deck","en":{"slug":"fighting-card-game-turn-resolver-and-deck","title":"Devlog #2: Uncapped Stamina, a Single TurnResolver, and the Deck on the Way","date":"2026-11-13","author":"Lucas Rosendo","tags":["game-develop","devlog","unity","game-design","architecture","ai-tooling"],"coverImage":null,"excerpt":"Since the first devlog, the stamina rule was rewritten, buffs and debuffs now carry to the next hit, combat got a single TurnResolver shared with the Monte Carlo simulator, and decision #29 replaced the fixed hand with a draw/discard deck.","readingTime":"6 min","contentHtml":"$3"},"pt":{"slug":"fighting-card-game-turn-resolver-and-deck","title":"Devlog #2: Estamina Sem Teto, TurnResolver Único e o Baralho que Vem aí","date":"2026-11-13","author":"Lucas Rosendo","tags":["game-develop","devlog","unity","game-design","architecture","ai-tooling"],"coverImage":null,"excerpt":"Desde o primeiro devlog, a regra de estamina foi reescrita, buffs e debuffs passaram a carregar pro próximo golpe, o combate ganhou um TurnResolver único compartilhado com o simulador Monte Carlo e a decisão #29 trocou a mão fixa por um baralho com compra e descarte.","readingTime":"6 min","contentHtml":"$4"}}}],["$L5","$L6"],"$L7"]}],"isPartial":"$@8","staleTime":"$9","varyParams":null},{"rsc":"$La","isPartial":"$@b","staleTime":"$9","varyParams":null},{"rsc":"$Lc","isPartial":"$@d","staleTime":"$9","varyParams":"$e"},{"rsc":"$Lf","isPartial":"$@10","staleTime":"$9","varyParams":"$e"},{"rsc":"$L11","isPartial":"$@12","staleTime":"$9","varyParams":null}],"isUpgradeableISRFallback":false,"a":"$@13","rootVaryParams":null,"needsRuntimeRequest":"$@14"}
+15:I[97367,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"OutletBoundary"]
+16:"$Sreact.suspense"
+18:I[97367,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"ViewportBoundary"]
+19:I[97367,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"MetadataBoundary"]
+1a:I[27201,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"IconMark"]
+1b:I[39756,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default"]
+1c:I[37457,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default"]
+1d:I[24315,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"LanguageProvider"]
+1e:I[22016,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],""]
+1f:I[9661,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default"]
+20:I[11340,["/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","/portfolio/_next/static/chunks/02m4qvfk9me-n.js"],"default"]
+:HL["/portfolio/_next/static/chunks/3plegg7med040.css","style"]
+:HL["/portfolio/_next/static/chunks/2nkvgjli46_47.css","style"]
+5:["$","link","0",{"rel":"stylesheet","href":"/portfolio/_next/static/chunks/3plegg7med040.css","precedence":"next"}]
+6:["$","script","script-0",{"src":"/portfolio/_next/static/chunks/3q7ymhu2dv51h.js","async":true}]
+7:["$","$L15",null,{"children":["$","$16",null,{"name":"Next.MetadataOutlet","children":"$@17"}]}]
+a:["$","$1","h",{"children":[null,["$","$L18",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L19",null,{"children":["$","$16",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Devlog #2: Uncapped Stamina, a Single TurnResolver, and the Deck on the Way | Lucas Rosendo"}],["$","meta","1",{"name":"description","content":"Since the first devlog, the stamina rule was rewritten, buffs and debuffs now carry to the next hit, combat got a single TurnResolver shared with the Monte Carlo simulator, and decision #29 replaced the fixed hand with a draw/discard deck."}],["$","link","2",{"rel":"manifest","href":"/portfolio/site.webmanifest"}],["$","link","3",{"rel":"icon","href":"/portfolio/favicon.ico"}],["$","link","4",{"rel":"icon","href":"/portfolio/favicon-16x16.png","sizes":"16x16","type":"image/png"}],["$","link","5",{"rel":"icon","href":"/portfolio/favicon-32x32.png","sizes":"32x32","type":"image/png"}],["$","link","6",{"rel":"apple-touch-icon","href":"/portfolio/apple-touch-icon.png"}],["$","$L1a","7",{}]]}]}]}],null]}]
+c:["$","$1","c",{"children":[null,["$","$L1b",null,{"parallelRouterKey":"children","template":["$","$L1c",null,{}]}]]}]
+f:["$","$1","c",{"children":[null,["$","$L1b",null,{"parallelRouterKey":"children","template":["$","$L1c",null,{}]}]]}]
+11:["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/portfolio/_next/static/chunks/2nkvgjli46_47.css","precedence":"next"}],["$","script","script-0",{"src":"/portfolio/_next/static/chunks/0wj3lbe1z1xak.js","async":true}],["$","script","script-1",{"src":"/portfolio/_next/static/chunks/02m4qvfk9me-n.js","async":true}]],["$","html",null,{"lang":"pt-BR","children":["$","body",null,{"children":["$","$L1d",null,{"children":[["$","header",null,{"className":"glass-header","children":["$","div",null,{"className":"header-container","children":[["$","div",null,{"className":"logo-container","children":["$","$L1e",null,{"href":"/","className":"logo glow-text","children":"<LR/>"}]}],["$","div",null,{"className":"header-actions","children":[["$","$L1f",null,{}],["$","$L20",null,{}]]}]]}]}],["$","$L1b",null,{"parallelRouterKey":"children","template":["$","$L1c",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]]}]}]}]]}]
+17:null
+14:true
+9:300
+9:C
+13:0
+b:"$undefined"
+d:"$undefined"
+10:"$undefined"
+12:"$undefined"
+8:"$undefined"
